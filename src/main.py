@@ -19,7 +19,8 @@ from src.utils import (
     discord_message_to_message,
 )
 from src import completion
-from src.completion import generate_completion_response, process_response
+# from src.completion import generate_completion_response, process_response
+from src.chat import generate_chat_response, process_response
 from src.moderation import (
     moderate_message,
     send_moderation_blocked_message,
@@ -34,6 +35,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = discord.Client(intents=intents)
+client._connection._get_websocket = asyncio.wait_for(
+        client._connection._get_websocket(), timeout=30.0)
 tree = discord.app_commands.CommandTree(client)
 
 
@@ -127,7 +130,7 @@ async def chat_command(int: discord.Interaction, message: str):
         async with thread.typing():
             # fetch completion
             messages = [Message(user=user.name, text=message)]
-            response_data = await generate_completion_response(
+            response_data = await generate_chat_response(
                 messages=messages, user=user
             )
             # send the result
@@ -244,7 +247,7 @@ async def on_message(message: DiscordMessage):
 
         # generate the response
         async with thread.typing():
-            response_data = await generate_completion_response(
+            response_data = await generate_chat_response(
                 messages=channel_messages, user=message.author
             )
 
